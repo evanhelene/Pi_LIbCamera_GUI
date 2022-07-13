@@ -188,10 +188,13 @@ if os.path.exists('test.jpg'):
    elif igw == 4656:
       Pi_Cam = 4
       max_shutter = max_ar
+   elif igw == 9152:
+      Pi_Cam = 5
+      max_shutter = max_ar
 else:
    Pi_Cam = 0
    max_shutter = max_v1
-if Pi_Cam == 4:
+if Pi_Cam >= 4:
     # read config_file
     configtxt = []
     with open("/boot/config.txt", "r") as file:
@@ -200,9 +203,9 @@ if Pi_Cam == 4:
             configtxt.append(line.strip())
             line = file.readline()
 
-if codec > 0 and Pi_Cam == 4 and ("dtoverlay=vc4-kms-v3d,cma-512" in configtxt): # Arducam IMX519 16MP
+if codec > 0 and Pi_Cam >= 4 and ("dtoverlay=vc4-kms-v3d,cma-512" in configtxt): # Arducam IMX519 16MP
     max_vformat = 9
-elif codec > 0 and Pi_Cam == 4: # Arducam IMX519 16MP
+elif codec > 0 and Pi_Cam >= 4: # Arducam IMX519 16MP or 64MP
     max_vformat = 8
 elif codec > 0 and Pi_Cam == 3:
     max_vformat = 8
@@ -404,8 +407,9 @@ def preview():
     speed2 = sspeed
     if speed2 > 6000000:
         speed2 = 6000000
+    # rpistr = "libcamera-still -n -t 0 "
     rpistr = "libcamera-vid -n --codec mjpeg -t 0 --segment 100"
-    if Pi_Cam == 4 or zoom == 10:
+    if Pi_Cam >= 4 or zoom == 10:
         rpistr += " --width 1920 --height 1440 -o /run/shm/test%d.jpg " 
     else:
         if preview_width == 640 and preview_height == 480:
@@ -428,7 +432,7 @@ def preview():
     if ev != 0:
         rpistr += " --ev " + str(ev)
     if sspeed > 5000000 and mode == 0:
-        rpistr += " --gain 1 --awbgain 1,1 --immediate"
+        rpistr += " --gain 1 --awbgain 1,1 "#--immediate"
     else:
         rpistr += " --gain " + str(gain)
         if awb == 0:
@@ -439,7 +443,7 @@ def preview():
     rpistr += " --saturation " + str(saturation/10)
     rpistr += " --sharpness "  + str(sharpness/10)
     rpistr += " --denoise "    + denoises[denoise]
-    if Pi_Cam == 4 and foc_man == 0:
+    if Pi_Cam >= 4 and foc_man == 0:
         rpistr += " --autofocus "
     if zoom > 0 and zoom < 10:
         zwidth = preview_width * (5-zoom)
@@ -451,8 +455,12 @@ def preview():
         zxo = ((igw-zwidth)/2)/igw
         zyo = ((igh-zheight)/2)/igh
         rpistr += " --roi " + str(zxo) + "," + str(zyo) + "," + str(zwidth/igw) + "," + str(zheight/igh)
+    
+#    if Pi_Cam > 4:
+#        rpistr = rpistr.replace("--width ","--preview-width ").replace("--height ","--preview-height ")
+
     p = subprocess.Popen(rpistr, shell=True, preexec_fn=os.setsid)
-    #print (rpistr)
+    print (rpistr)
     restart = 0
     time.sleep(.25)
 
@@ -684,7 +692,7 @@ while True:
                 zy = int(zyq/2) + 1
                 zyp = 0
                 zyq = (zy - zyp) * 2
-            if Pi_Cam == 4:
+            if Pi_Cam >= 4:
                 if vwidth == 1280 and vheight == 960:
                     pygame.draw.rect(windowSurfaceObj,(155,0,150),Rect(preview_width * 0.20,preview_height * 0.22,preview_width * 0.62,preview_height * 0.57),1)
                 elif vwidth == 1280 and vheight == 720:
@@ -1119,9 +1127,9 @@ while True:
                 else:
                     if (sq_dis == 0 and mousex < preview_width + bw + (bw/2)) or (sq_dis == 1 and button_pos == 0):
                         vformat -=1
-                        if codec > 0 and Pi_Cam == 4 and ("dtoverlay=vc4-kms-v3d,cma-512" in configtxt): # Arducam IMX519 16MP
+                        if codec > 0 and Pi_Cam >= 4 and ("dtoverlay=vc4-kms-v3d,cma-512" in configtxt): # Arducam IMX519 16MP or 64mp
                             max_vformat = 9
-                        elif codec > 0 and Pi_Cam == 4: # Arducam IMX519 16MP
+                        elif codec > 0 and Pi_Cam >= 4: # Arducam IMX519 16MP and 64MP
                             max_vformat = 8
                         elif codec > 0 and Pi_Cam == 3:
                             max_vformat = 8
@@ -1135,9 +1143,9 @@ while True:
                         vformat = max(vformat,pmin)
                     else:
                         vformat +=1
-                        if codec > 0 and Pi_Cam == 4 and ("dtoverlay=vc4-kms-v3d,cma-512" in configtxt): # Arducam IMX519 16MP
+                        if codec > 0 and Pi_Cam >= 4 and ("dtoverlay=vc4-kms-v3d,cma-512" in configtxt): # Arducam IMX519 16MP
                             max_vformat = 9
-                        elif codec > 0 and Pi_Cam == 4: # Arducam IMX519 16MP
+                        elif codec > 0 and Pi_Cam >= 4: # Arducam IMX519 16MP and 64MP
                             max_vformat = 8
                         elif codec > 0 and Pi_Cam == 3:
                             max_vformat = 8
@@ -1175,9 +1183,9 @@ while True:
                     else:
                         codec  +=1
                         codec = min(codec ,pmax)
-                if codec > 0 and Pi_Cam == 4 and ("dtoverlay=vc4-kms-v3d,cma-512" in configtxt): # Arducam IMX519 16MP
+                if codec > 0 and Pi_Cam >= 4 and ("dtoverlay=vc4-kms-v3d,cma-512" in configtxt): # Arducam IMX519 16MP
                     max_vformat = 9
-                elif codec > 0 and Pi_Cam == 4: # Arducam IMX519 16MP
+                elif codec > 0 and Pi_Cam >= 4: # Arducam IMX519 16MP and 64MP
                     max_vformat = 8
                 elif codec > 0 and Pi_Cam == 3:
                     max_vformat = 8
@@ -1206,13 +1214,13 @@ while True:
                     if video_limits[f] == 'zoom':
                         pmin = video_limits[f+1]
                         pmax = video_limits[f+2]
-                if (mousex > preview_width + bw and mousey < ((button_row-1)*bh) + 10) and Pi_Cam == 4 and foc_man == 1:
+                if (mousex > preview_width + bw and mousey < ((button_row-1)*bh) + 10) and Pi_Cam >= 4 and foc_man == 1:
                     focus = int(((mousex-preview_width-bw) / bw) * 4096)
                     draw_Vbar(1,5,dgryColor,'focus',focus)
                     os.system("v4l2-ctl -d /dev/v4l-subdev1 -c focus_absolute=" + str(focus))
                     text(1,5,3,1,1,str(focus),fv,0)
 
-                elif (mousey > preview_height + (bh*2) and mousey < preview_height + (bh*2) + 10) and Pi_Cam == 4 and foc_man == 1:
+                elif (mousey > preview_height + (bh*2) and mousey < preview_height + (bh*2) + 10) and Pi_Cam >= 4 and foc_man == 1:
                     focus = int(((mousex-((button_row - 1)*bw)) / bw)* 4096)
                     draw_Vbar(1,5,dgryColor,'focus',focus)
                     os.system("v4l2-ctl -d /dev/v4l-subdev1 -c focus_absolute=" + str(focus))
@@ -1251,7 +1259,7 @@ while True:
                         text(1,5,3,0,1,"FOCUS",ft,0)
                         text(1,3,3,1,1,str(preview_width) + "x" + str(preview_height),fv,11)
                         time.sleep(0.25)
-                    elif Pi_Cam == 4 and foc_man == 0:
+                    elif Pi_Cam >= 4 and foc_man == 0:
                         foc_man = 1 # manual focus
                         button(1,5,1,6)
                         text(1,5,3,0,1,"FOCUS MAN",ft,0)
@@ -1271,7 +1279,7 @@ while True:
                         text(1,5,3,1,1,str(focus),fv,0)
                         draw_Vbar(1,5,dgryColor,'focus',focus)
                         time.sleep(0.25)
-                    elif Pi_Cam == 4 and foc_man == 1:
+                    elif Pi_Cam >= 4 and foc_man == 1:
                         zoom = 0
                         foc_man = 0
                         button(1,5,0,4)
@@ -1547,7 +1555,7 @@ while True:
                         rpistr += " --saturation " + str(saturation/10)
                         rpistr += " --sharpness " + str(sharpness/10)
                         rpistr += " --denoise "    + denoises[denoise]
-                        if Pi_Cam == 4 and foc_man == 0:
+                        if Pi_Cam >= 4 and foc_man == 0:
                             rpistr += " --autofocus "
                         if zoom > 0 and zoom < 10:
                             zwidth = preview_width * (5-zoom)
@@ -1630,7 +1638,7 @@ while True:
                         rpistr += " --saturation " + str(saturation/10)
                         rpistr += " --sharpness " + str(sharpness/10)
                         rpistr += " --denoise "    + denoises[denoise]
-                        if Pi_Cam == 4 and foc_man == 0:
+                        if Pi_Cam >= 4 and foc_man == 0:
                             rpistr += " --autofocus "
                         rpistr += " -p 0,0," + str(preview_width) + "," + str(preview_height)
                    
@@ -1746,7 +1754,7 @@ while True:
                             rpistr += " --saturation " + str(saturation/10)
                             rpistr += " --sharpness " + str(sharpness/10)
                             rpistr += " --denoise "    + denoises[denoise]
-                            if Pi_Cam == 4 and foc_man == 0:
+                            if Pi_Cam >= 4 and foc_man == 0:
                                  rpistr += " --autofocus "
                             if zoom > 0 and zoom < 10:
                                 zwidth = preview_width * (5-zoom)
@@ -1838,7 +1846,7 @@ while True:
                                 rpistr += " --saturation " + str(saturation/10)
                                 rpistr += " --sharpness " + str(sharpness/10)
                                 rpistr += " --denoise "    + denoises[denoise]
-                                if Pi_Cam == 4 and foc_man == 0:
+                                if Pi_Cam >= 4 and foc_man == 0:
                                     rpistr += " --autofocus "
                                 if zoom > 0 and zoom < 10:
                                     zwidth = preview_width * (5-zoom)
@@ -1902,7 +1910,8 @@ while True:
                             now = datetime.datetime.now()
                             timestamp = now.strftime("%y%m%d%H%M%S")
                             fname =  pic_dir + str(timestamp) + '_%04d.' + extns2[extn]
-                            rpistr = "libcamera-vid -n --codec mjpeg -t " + str(tduration*1000) + " --segment 1 -o " + fname
+                            # rpistr = "libcamera-vid -n --codec mjpeg -t " + str(tduration*1000) + " --segment 1 -o " + fname
+                            rpistr = "libcamera-still -n -e " + extns[extn] + " --segment 1 -o " + fname
                             if vwidth == 640 and vheight == 480:
                                 rpistr += " --width 720 --height 540 "
                             elif zoom == 10:

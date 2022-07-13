@@ -1,0 +1,1 @@
+python3 /home/pi/pi_libcamera_gui/PiLibCameraGUI.py
