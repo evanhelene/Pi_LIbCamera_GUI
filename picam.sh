@@ -1,1 +1,1 @@
-python3 /home/pi/pi_libcamera_gui/PiLibCameraGUI.py
+python3 /home/pi/Pi_LIbCamera_GUI/PiLibCameraGUI.py
