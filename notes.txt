@@ -1,0 +1,8 @@
+  175  touch ~/.config/autostart/pi_lib_camera_gui.desktop
+  180  sudo cp ~/.config/autostart/pi_lib_camera_gui.desktop /usr/share/applications/
+  178  chmod +x picam.sh 
+  206  git config --global credential.helper store
+
+  222  git clone https://github.com/evanhelene/Pi_LIbCamera_GUI.git
+Exec=/home/pi/Pi_LIbCamera_GUI/picam.sh
+

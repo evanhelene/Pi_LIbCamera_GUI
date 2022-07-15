@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=picam
+Exec=/home/pi/Pi_LIbCamera_GUI/picam.sh
+StartupNotify=false
+Terminal=true
