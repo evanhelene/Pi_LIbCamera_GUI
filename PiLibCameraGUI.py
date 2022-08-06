@@ -1538,7 +1538,7 @@ while True:
                         if extns[extn] == "jpg" and preview_width == 640 and preview_height == 480 and zoom == 10:
                             rpistr += " -r --rawfull"
                         if mode == 0:
-                            rpistr += " --shutter " + str(sspeed)
+                            rpistr += " --shutter " + str(sspeed * 10) # manual shutter speed boost OK?
                         else:
                             rpistr += " --exposure " + str(modes[mode])
                         if ev != 0:
