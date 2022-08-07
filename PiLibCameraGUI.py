@@ -1579,7 +1579,10 @@ while True:
                             if tb < 0:
                                 tb = 0
                             rpistr += " --roi " + str(ta/1920) + "," + str(tb/1440) + "," + str(preview_width/1920) + "," + str(preview_height/1440)
+                        if Pi_Cam == 5 and sspeed > 1000000 and mode == 0:
+                            rpistr += " --width 4624 --height 3472 " # use 16MP superpixel mode for higher light sensitivity
                         #print(rpistr)
+                        pygame.display.set_caption(rpistr)
                         os.system(rpistr)
 
                         while not os.path.exists(fname):
