@@ -49,7 +49,7 @@ blue        = 12      # blue balance
 red         = 15      # red balance 
 extn        = 0       # still file type  (0 = jpg)
 vlen        = 10      # video length in seconds
-fps         = 25      # video fps
+fps         = 0      # video fps
 vformat     = 5       # set video format (5 = 1920x1080)
 codec       = 0       # set video codec  (0 = h264)
 tinterval   = 5       # time between timelapse shots in seconds
@@ -118,7 +118,7 @@ extns        = ['jpg','png','bmp','rgb','yuv420','raw']
 extns2       = ['jpg','png','bmp','data','data','jpg']
 vwidths      = [640,720,800,1280,1280,1920,2592,3280,4056,4624,9152]
 vheights     = [480,540,600, 720, 960,1080,1944,2464,3040,3472,6944]
-v_max_fps    = [60 , 60, 40,  40,  40,  30,  20,  20,  20,  20,  20]
+v_max_fps    = [60 , 60, 40,  40,  40,  30,  20,  20,  20,  20,  20, 1023, 1023]
 zwidths      = [640,800,1280,2592,3280,4056,4656,4624,9152]
 zheights     = [480,600, 960,1944,2464,3040,3496,3472,6944]
 zws          = [864,1080,1728,2592,1093,1367,2187,3280,1352,1690,2704,4056,1552,1940,3104,4656]
@@ -133,7 +133,7 @@ meters       = ['centre','spot','average']
 awbs         = ['off','auto','incandescent','tungsten','fluorescent','indoor','daylight','cloudy']
 denoises     = ['off','cdn_off','cdn_fast','cdn_hq']
 still_limits = ['mode',0,len(modes)-1,'speed',0,len(shutters)-1,'gain',0,20,'brightness',-100,100,'contrast',0,200,'ev',-10,10,'blue',1,80,'sharpness',0,30,'denoise',0,len(denoises)-1,'quality',0,100,'red',1,80,'extn',0,len(extns)-1,'saturation',0,20,'meter',0,len(meters)-1,'awb',0,len(awbs)-1]
-video_limits = ['vlen',1,999,'fps',1,40,'focus',0,4096,'vformat',0,5,'0',0,0,'zoom',0,4,'Focus',0,1,'tduration',1,9999,'tinterval',0,999,'tshots',1,999,'flicker',0,3,'codec',0,len(codecs)-1,'profile',0,len(h264profiles)-1,'level',0,len(h264levels)-1]
+video_limits = ['vlen',1,999,'fps',0,1023,'focus',0,4096,'vformat',0,5,'0',0,0,'zoom',0,4,'Focus',0,1,'tduration',1,9999,'tinterval',0,999,'tshots',1,999,'flicker',0,3,'codec',0,len(codecs)-1,'profile',0,len(h264profiles)-1,'level',0,len(h264levels)-1]
 
 # check config_file exists, if not then write default values
 if not os.path.exists(config_file):
@@ -209,6 +209,7 @@ if os.path.exists('test.jpg'):
 else:
    Pi_Cam = 0
    max_shutter = max_v1
+   
 if Pi_Cam >= 4:
     # read /boot/config.txt file
     configtxt = []
@@ -219,7 +220,7 @@ if Pi_Cam >= 4:
             line = file.readline()
 
 if codec > 0 and Pi_Cam >= 4 and ("dtoverlay=vc4-kms-v3d,cma-512" in configtxt): # Arducam IMX519 16MP or 64MP
-    max_vformat = 10
+    max_vformat = 12
     max_zformat = 7
 elif codec > 0 and Pi_Cam >= 4: # Arducam IMX519 16MP or 64MP
     max_vformat = 8
@@ -1695,6 +1696,8 @@ while True:
                         if Pi_Cam == 5 and sspeed > 1000000 and mode == 0:
                             rpistr += " --width 4624 --height 3472 " # use 16MP superpixel mode for higher light sensitivity
                         #print(rpistr)
+                        text(0,0,6,2,1,rpistr,int(fv*1.7),1)
+
                         os.system(rpistr)
 
                         while not os.path.exists(fname):
@@ -1787,6 +1790,7 @@ while True:
                             rpistr += " --width 4624 --height 3472 " # use 16MP superpixel mode for higher light sensitivity
                         #print(rpistr)
                         pygame.display.set_caption(rpistr)
+                        text(0,0,6,2,1,rpistr,int(fv*1.7),1)
                         os.system(rpistr)
 
                         while not os.path.exists(fname):
