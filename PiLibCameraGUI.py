@@ -110,8 +110,8 @@ fv = int(preview_width/52)
 modes        = ['manual','normal','sport']
 extns        = ['jpg','png','bmp','rgb','yuv420','raw']
 extns2       = ['jpg','png','bmp','data','data','jpg']
-vwidths      = [640,720,800,1280,1280,1920,2592,3280,4056,4656]
-vheights     = [480,540,600, 720, 960,1080,1944,2464,3040,3496]
+vwidths      = [640,720,800,1280,1280,1920,2592,3280,4056,4656,4624,9152]
+vheights     = [480,540,600, 720, 960,1080,1944,2464,3040,3496,3472,6944]
 v_max_fps    = [60 , 40, 40,  40,  40,  30,  20,  20,  20,  20]
 shutters     = [-2000,-1600,-1250,-1000,-800,-640,-500,-400,-320,-288,-250,-240,-200,-160,-144,-125,-120,-100,-96,-80,-60,-50,-48,-40,-30,-25,-20,-15,-13,-10,-8,-6,-5,-4,-3,
                 0.4,0.5,0.6,0.8,1,1.1,1.2,2,3,4,5,6,7,8,9,10,15,20,25,30,40,50,60,75,100,120,150,200,220,230,239]
@@ -148,10 +148,10 @@ fullscreen  = config[5]
 red         = config[6]
 blue        = config[7]
 ev          = config[8]
-vlen        = config[9]
-fps         = config[10]
-vformat     = config[11]
-codec       = config[12]
+vlen        = config[9] # astro shutter speed
+fps         = config[10] # astro focus 8
+vformat     = config[11] # astro resolution
+codec       = config[12] # astro awb
 tinterval   = config[13]
 tshots      = config[14]
 extn        = config[15]
@@ -203,7 +203,9 @@ if Pi_Cam >= 4:
             configtxt.append(line.strip())
             line = file.readline()
 
-if codec > 0 and Pi_Cam >= 4 and ("dtoverlay=vc4-kms-v3d,cma-512" in configtxt): # Arducam IMX519 16MP
+if codec > 0 and Pi_Cam == 5 and ("dtoverlay=vc4-kms-v3d,cma-512" in configtxt): # Arducam 64MP
+    max_vformat = 11
+elif codec > 0 and Pi_Cam >= 4 and ("dtoverlay=vc4-kms-v3d,cma-512" in configtxt): # Arducam IMX519 16MP
     max_vformat = 9
 elif codec > 0 and Pi_Cam >= 4: # Arducam IMX519 16MP or 64MP
     max_vformat = 8
@@ -484,7 +486,7 @@ button(1,12,0,5)
 text(0,0,1,0,1,"CAPTURE",ft,7)
 text(0,0,1,1,1,"Still",ft,7)
 text(1,0,1,0,1,"CAPTURE",ft,7)
-text(1,0,1,1,1,"Video",ft,7)
+text(1,0,1,1,1,"Astro",ft,7)
 text(0,1,5,0,1,"Mode",ft,10)
 text(0,1,3,1,1,modes[mode],fv,10)
 text(0,2,5,0,1,"Shutter S",ft,10)
@@ -540,13 +542,16 @@ text(0,11,3,1,1,str(saturation/10),fv,10)
 text(0,12,5,0,1,"Metering",fv,10)
 text(0,12,3,1,1,meters[meter],fv,10)
 
-text(1,1,5,0,1,"V_Length S",ft,11)
+# was video
+text(1,1,5,0,1,"Shutter S",ft,11)
 text(1,1,3,1,1,str(vlen),fv,11)
-text(1,2,5,0,1,"V_FPS",ft,11)
+text(1,2,5,0,1,"Focus 8",ft,11)
 text(1,2,3,1,1,str(fps),fv,11)
-text(1,3,5,0,1,"V_Format",ft,11)
-text(1,4,5,0,1,"V_Codec",ft,11)
+text(1,3,5,0,1,"Resolution",ft,11)
+text(1,4,5,0,1,"AWB",ft,11)
 text(1,4,3,1,1,codecs[codec],fv,11)
+
+
 text(1,6,1,0,1,"CAPTURE",ft,7)
 text(1,6,1,1,1,"Timelapse",ft,7)
 text(1,7,5,0,1,"Duration S",ft,12)
@@ -1605,46 +1610,50 @@ while True:
  
                 if button_column == 2:                       
                     if button_row == 1:
-                        # take video
+                         # take astro still
                         os.killpg(p.pid, signal.SIGTERM)
-                        button(1,0,1,3)
-                        text(1,0,3,0,1,"STOP ",ft,0)
-                        text(1,0,3,1,1,"Record",ft,0)
-                        text(0,0,0,0,1,"CAPTURE",ft,7)
-                        text(0,0,0,1,1,"Still",ft,7)
+                        button(0,0,1,4)
+                        text(0,0,2,0,1,"CAPTURE",ft,0)
+                        text(1,0,0,0,1,"CAPTURE",ft,7)
+                        text(1,0,0,1,1,"Astro",ft,7)
                         text(1,6,0,0,1,"CAPTURE",ft,7)
                         text(1,6,0,1,1,"Timelapse",ft,7)
-                        text(0,0,6,2,1,"Please Wait, taking video ...",int(fv*1.7),1)
+                        text(0,0,6,2,1,"Please Wait, taking still ...",int(fv*1.7),1)
                         now = datetime.datetime.now()
                         timestamp = now.strftime("%y%m%d%H%M%S")
-                        vname =  vid_dir + str(timestamp) + "." + codecs2[codec]
-                        rpistr = "libcamera-vid -t " + str(vlen * 1000) + " -o " + vname + " --framerate " + str(fps)
-                        if codecs[codec] != 'h264':
-                            rpistr += " --codec " + codecs[codec]
-                        rpistr += " --brightness " + str(brightness/100) + " --contrast " + str(contrast/100)
+                        if extns[extn] != 'raw':
+                            fname =  pic_dir + str(timestamp) + '.' + extns2[extn]
+                            rpistr = "libcamera-still -e " + extns[extn] + " -n -o " + fname
+                        else:
+                            fname =  pic_dir + str(timestamp) + '.' + extns2[extn]
+                            rpistr = "libcamera-still -r -n -o " + fname
+                            if preview_width == 640 and preview_height == 480 and zoom == 10:
+                                rpistr += " --rawfull"
+                        # rpistr += " --brightness " + str(brightness/100) + " --contrast " + str(contrast/100)
                         if zoom > 0:
                             rpistr += " --width " + str(preview_width) + " --height " + str(preview_height)
-                        else:
-                            rpistr += " --width " + str(vwidth) + " --height " + str(vheight)
-                        if mode == 0:
-                            rpistr += " --shutter " + str(sspeed)
-                        else:
-                            rpistr += " --exposure " + modes[mode]
-                        rpistr += " --gain " + str(gain)
+                        if extns[extn] == "jpg" and preview_width == 640 and preview_height == 480 and zoom == 10:
+                            rpistr += " -r --rawfull"
+                        # if mode == 0:
+                        rpistr += " --shutter " + str(100000 * vlen)
+                        # else:
+                        #     rpistr += " --exposure " + str(modes[mode])
                         if ev != 0:
                             rpistr += " --ev " + str(ev)
-                        if awb == 0:
-                            rpistr += " --awbgains " + str(red/10) + "," + str(blue/10)
-                        else:
-                            rpistr += " --awb " + awbs[awb]
-                        rpistr += " --metering " + meters[meter]
-                        rpistr += " --saturation " + str(saturation/10)
-                        rpistr += " --sharpness " + str(sharpness/10)
-                        rpistr += " --denoise "    + denoises[denoise]
+                        # if sspeed > 1000000 and mode == 0:
+                        rpistr += " --gain 1 --awbgains 1,1  --immediate "
+                        # else:    
+                        #     rpistr += " --gain " + str(gain)
+                            # if awb == 0:
+                            #     rpistr += " --awbgains " + str(red/10) + "," + str(blue/10)
+                            # else:
+                            #     rpistr += " --awb " + awbs[awb]
+                        # rpistr += " --metering " + meters[meter]
+                        # rpistr += " --saturation " + str(saturation/10)
+                        # rpistr += " --sharpness " + str(sharpness/10)
+                        # rpistr += " --denoise "    + denoises[denoise]
                         if Pi_Cam >= 4 and foc_man == 0:
                             rpistr += " --autofocus "
-                        rpistr += " -p 0,0," + str(preview_width) + "," + str(preview_height)
-                   
                         if zoom > 0 and zoom < 10:
                             zwidth = preview_width * (5-zoom)
                             if zwidth > igw:
@@ -1654,7 +1663,7 @@ while True:
                                 zheight = igh - int(igh/20)
                             zxo = ((igw-zwidth)/2)/igw
                             zyo = ((igh-zheight)/2)/igh
-                            rpistr += " --mode 1920:1440:10 --roi " + str(zxo) + "," + str(zyo) + "," + str(zwidth/igw) + "," + str(zheight/igh)
+                            rpistr += " --roi " + str(zxo) + "," + str(zyo) + "," + str(zwidth/igw) + "," + str(zheight/igh)
                         if zoom == 10:
                             ta = int(zx * (1920/preview_width)) - int(preview_width/2)
                             if ta + preview_width > 1920:
@@ -1666,49 +1675,31 @@ while True:
                                 tb = 1440 - preview_height
                             if tb < 0:
                                 tb = 0
-                            rpistr += " --mode 1920:1440:10 --roi " + str(ta/1920) + "," + str(tb/1440) + "," + str(preview_width/1920) + "," + str(preview_height/1440)
-                            
-                        p = subprocess.Popen(rpistr, shell=True, preexec_fn=os.setsid)
-                        start_video = time.monotonic()
-                        stop = 0
-                        while time.monotonic() - start_video < vlen and stop == 0:
-                            for event in pygame.event.get():
-                                if (event.type == MOUSEBUTTONUP):
-                                    mousex, mousey = event.pos
-                                    # stop video recording
-                                    if mousex > preview_width:
-                                        button_column = int((mousex-preview_width)/bw) + 1
-                                        button_row = int((mousey)/bh) + 1
-                                        if mousex > preview_width + (bw/2):
-                                            button_pos = 1
-                                        else:
-                                            button_pos = 0
-                                    else:
-                                        if mousey - preview_height < bh:
-                                            button_column = 1
-                                            button_row = int(mousex / bw) + 1
-                                        elif mousey - preview_height < bh * 2:
-                                            button_column = 1
-                                            button_row = int(mousex / bw) + 7
-                                        elif mousey - preview_height < bh * 3:
-                                            button_column = 2
-                                            button_row = int(mousex / bw) + 1
-                                        elif mousey - preview_height < bh * 4:
-                                            button_column = 2
-                                            button_row = int(mousex / bw) + 7
-                                    if button_column == 2 and button_row == 1:
-                                       os.killpg(p.pid, signal.SIGTERM)
-                                       stop = 1
-                        text(0,0,6,2,1,vname,int(fv*1.5),1)
-                        time.sleep(1)
-                        button(1,0,0,3)
+                            rpistr += " --roi " + str(ta/1920) + "," + str(tb/1440) + "," + str(preview_width/1920) + "," + str(preview_height/1440)
+                        if Pi_Cam == 5 :
+                            rpistr += " --width 4624 --height 3472 " # use 16MP superpixel mode for higher light sensitivity
+                        #print(rpistr)
+                        pygame.display.set_caption(rpistr)
+                        os.system(rpistr)
+
+                        while not os.path.exists(fname):
+                            pass
+                        if extns2[extn] == 'jpg' or extns2[extn] == 'bmp' or extns2[extn] == 'png':
+                            image = pygame.image.load(fname)
+                            catSurfacesmall = pygame.transform.scale(image, (preview_width,preview_height))
+                            windowSurfaceObj.blit(catSurfacesmall, (0, 0))
+                        text(0,0,6,2,1,fname,int(fv*1.5),1)
+                        pygame.display.update()
+                        time.sleep(2)
+                        button(0,0,0,4)
                         text(0,0,1,0,1,"CAPTURE",ft,7)
-                        text(0,0,1,1,1,"Still",ft,7)
                         text(1,0,1,0,1,"CAPTURE",ft,7)
-                        text(1,0,1,1,1,"Video",ft,7)
+                        text(1,0,1,1,1,"Astro",ft,7)
+                        text(0,0,1,1,1,"Still",ft,7)
                         text(1,6,1,0,1,"CAPTURE",ft,7)
                         text(1,6,1,1,1,"Timelapse",ft,7)
                         restart = 2
+ 
                    
                     elif button_row == 7:
                         # take timelapse
