@@ -118,7 +118,7 @@ extns        = ['jpg','png','bmp','rgb','yuv420','raw']
 extns2       = ['jpg','png','bmp','data','data','jpg']
 vwidths      = [640,720,800,1280,1280,1920,2592,3280,4056,4624,9152]
 vheights     = [480,540,600, 720, 960,1080,1944,2464,3040,3472,6944]
-v_max_fps    = [60 , 60, 40,  40,  40,  30,  20,  20,  20,  20,  20, 1023, 1023]
+v_max_fps    = [1023 , 60, 40,  40,  40,  1023,  20,  20,  20,  20,  20, 1023, 1023]
 zwidths      = [640,800,1280,2592,3280,4056,4656,4624,9152]
 zheights     = [480,600, 960,1944,2464,3040,3496,3472,6944]
 zws          = [864,1080,1728,2592,1093,1367,2187,3280,1352,1690,2704,4056,1552,1940,3104,4656]
@@ -1750,20 +1750,18 @@ while True:
                         #     rpistr += " --exposure " + str(modes[mode])
                         if ev != 0:
                             rpistr += " --ev " + str(ev)
-                        # if sspeed > 1000000 and mode == 0:
-                        rpistr += " --gain 1 --awbgains 1,1  --immediate "
-                        # else:    
-                        #     rpistr += " --gain " + str(gain)
-                            # if awb == 0:
-                            #     rpistr += " --awbgains " + str(red/10) + "," + str(blue/10)
-                            # else:
-                            #     rpistr += " --awb " + awbs[awb]
+#                        rpistr += " --gain 1 --awbgains 1,1  --immediate "
+                        rpistr += " --gain " + str(gain)
+                        if awb == 0:
+                            rpistr += " --awbgains " + str(red/10) + "," + str(blue/10)
+                        else:
+                            rpistr += " --awb " + awbs[awb]
                         # rpistr += " --metering " + meters[meter]
                         # rpistr += " --saturation " + str(saturation/10)
                         # rpistr += " --sharpness " + str(sharpness/10)
                         # rpistr += " --denoise "    + denoises[denoise]
-                        if Pi_Cam >= 4 and foc_man == 0:
-                            rpistr += " --autofocus "
+                        # if Pi_Cam >= 4 and foc_man == 0:
+                        #     rpistr += " --autofocus "
                         if zoom > 0 and zoom < 10:
                             zwidth = preview_width * (5-zoom)
                             if zwidth > igw:
@@ -1789,8 +1787,9 @@ while True:
                         if Pi_Cam == 5 :
                             rpistr += " --width 4624 --height 3472 " # use 16MP superpixel mode for higher light sensitivity
                         #print(rpistr)
-                        pygame.display.set_caption(rpistr)
+                        pygame.display.set_caption(rpistr + " " + str(fps))
                         text(0,0,6,2,1,rpistr,int(fv*1.7),1)
+                        os.system("v4l2-ctl -d /dev/v4l-subdev1 -c focus_absolute=" + str(fps))
                         os.system(rpistr)
 
                         while not os.path.exists(fname):
