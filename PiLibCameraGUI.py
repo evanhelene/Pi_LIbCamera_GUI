@@ -465,8 +465,17 @@ def preview():
     rpistr += " --sharpness "  + str(sharpness/10)
     rpistr += " --denoise "    + denoises[denoise]
     rpistr += " --quality " + str(quality)
+
+
+    if ('high' == h264profiles[profile]):
+        foc_man=1
+    else:
+        foc_man=0
+
     if Pi_Cam >= 4 and foc_man == 0:
         rpistr += " --autofocus "
+    elif foc_man == 1:
+        os.system("v4l2-ctl -d /dev/v4l-subdev1 -c focus_absolute=" + str(fps))
     if zoom > 1:
         zxo = ((1920-zwidths[4 - zoom])/2)/1920
         zyo = ((1440-zheights[4 - zoom])/2)/1440
@@ -1349,6 +1358,7 @@ while True:
                     else:
                         profile  +=1
                         profile = min(profile ,pmax)
+
                 text(1,5,3,1,1,h264profiles[profile],fv,11)
                 draw_Vbar(1,5,lpurColor,'profile',profile)
                 time.sleep(.25)
